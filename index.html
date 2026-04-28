@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Novos Caminhos - Araraquara/SP</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2ecc71">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="favicon.png">
+
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f7f2;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #root { height: 100%; width: 100%; }
+
+        .leaflet-container {
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 1 !important;
+        }
+
+        /* Splash Screen */
+        #splash {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pulse-logo {
+            width: 120px;
+            height: 120px;
+            animation: pulse 2s infinite ease-in-out;
+            object-fit: contain;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+
+        /* =========================
+           ESTRUTURA DA BARRA MOBILE
+           ========================= */
+        @media (max-width: 768px) {
+        /* 1. O MAPA FICA FIXO NO FUNDO */
+        #root { height: 100vh; overflow: hidden; }
+        .leaflet-container { height: 100% !important; z-index: 1; }
+
+        /* 2. FORÇAR A SIDEBAR A TER 60% E NADA MAIS */
+        /* Usamos seletores extremamente específicos para vencer o React */
+        aside, 
+        section[class*="sidebar"], 
+        #mobile-sidebar-container,
+        div > aside {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            
+            /* ALTURA REAL: 60% da tela */
+            height: 60vh !important;
+            max-height: 60vh !important;
+            
+            background: white !important;
+            z-index: 9999 !important;
+            border-radius: 20px 20px 0 0 !important;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.2) !important;
+            
+            /* Movimento de Gaveta */
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transform: translateY(calc(100% - 70px)) !important; /* Minimizada */
+        }
+
+        /* 3. QUANDO ESTIVER ABERTA (Classe aplicada pelo React ou via ID) */
+        aside.mobile-open,
+        .open aside,
+        #mobile-sidebar-container.open aside,
+        section[class*="sidebar"][style*="translateY(0)"] {
+            transform: translateY(0) !important;
+        }
+
+        /* 4. FORÇAR O SCROLL INTERNO */
+        /* Isso resolve o problema das informações cortadas */
+        aside > div, 
+        section > div,
+        [class*="sidebar-content"] {
+            height: 100% !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding-bottom: 80px !important; /* Espaço extra para não cortar o fim */
+        }
+        
+        /* 5. A ALÇA (PAINEL) */
+        aside::before {
+            content: "PAINEL";
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 25px;
+            border-radius: 15px 15px 0 0;
+            font-size: 10px;
+            font-weight: 900;
+            color: #2563eb;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+            letter-spacing: 2px;
+        }
+    }
+    </style>
+
+    <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "path": "https://esm.sh/path@^0.12.7",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "url": "https://esm.sh/url@^0.11.4"
+  }
+}
+</script>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body class="overflow-hidden">
+
+    <div id="splash">
+        <img src="favicon.png" alt="Novos Caminhos" class="pulse-logo">
+        <p class="mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-[#333] opacity-40">Carregando Rede de Apoio...</p>
+    </div>
+
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <script>
+        // Splash Removal
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('splash');
+            if (splash) {
+                setTimeout(() => {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.remove(), 600);
+                }, 800);
+            }
+        });
+
+        // Lógica de 3 Níveis (20%, 40%, 60%)
+        const initSheetLogic = () => {
+            const aside = document.querySelector("aside") || document.querySelector('section[class*="sidebar"]');
+            if (!aside) return;
+
+            let startY = 0;
+            let currentTranslateY = 0;
+            const windowHeight = window.innerHeight;
+
+            // Níveis definidos em % da tela que sobram para baixo (transform: translateY)
+            const levels = {
+                min: windowHeight - 65, // Apenas alça (Nível 0)
+                low: windowHeight * 0.8, // 20% visível
+                mid: windowHeight * 0.6, // 40% visível
+                high: 0                   // 60% visível (O limite do CSS é 60vh)
+            };
+
+            aside.addEventListener("touchstart", e => {
+                startY = e.touches[0].clientY;
+                aside.style.transition = "none";
+            });
+
+            aside.addEventListener("touchmove", e => {
+                const touchY = e.touches[0].clientY;
+                const deltaY = touchY - startY;
+                if (deltaY > -windowHeight) { 
+                    aside.style.transform = `translateY(${deltaY}px)`;
+                }
+            });
+
+            aside.addEventListener("touchend", e => {
+                const endY = e.changedTouches[0].clientY;
+                const diff = startY - endY; // Positivo se subir, Negativo se descer
+                
+                aside.style.transition = "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)";
+
+                // Lógica de "Snap" (Ímã) para os níveis
+                if (diff > 50) {
+                    // Se puxou para cima, vai para o próximo estágio (Max 60%)
+                    aside.style.transform = "translateY(0)";
+                } else if (diff < -50) {
+                    // Se puxou para baixo, minimiza
+                    aside.style.transform = `translateY(calc(100% - 65px))`;
+                } else {
+                    // Se foi um toque curto ou sem movimento, apenas reseta para onde estava
+                    aside.style.transform = aside.style.transform.includes('-') ? `translateY(calc(100% - 65px))` : "translateY(0)";
+                }
+            });
+
+            // Abre automaticamente ao clicar em algo no mapa
+            const observer = new MutationObserver(() => {
+                aside.style.transform = "translateY(0)";
+            });
+            observer.observe(aside, { childList: true, subtree: true });
+        };
+
+        const checkAside = setInterval(() => {
+            if (document.querySelector("aside")) {
+                initSheetLogic();
+                clearInterval(checkAside);
+            }
+        }, 500);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+    </script>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "Novos Caminhos 2026",
+  "description": "A modern, responsive geolocation web application built with React, Tailwind CSS, and Leaflet.js. Features a full-screen interactive map, a dynamic sidebar for location details, and deep-linking to navigation apps like Google Maps and Waze.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
