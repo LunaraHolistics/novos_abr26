@@ -105,6 +105,14 @@ const Map: React.FC<MapProps> = ({
   useEffect(() => {
     if (!containerRef.current || typeof L === "undefined") return;
 
+HEAD
+    const streetLayer = L.tileLayer(
+      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution: "© OpenStreetMap contributors",
+        maxZoom: 19,
+      },
+    );
     const streetLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors',
   maxZoom: 19
