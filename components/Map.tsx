@@ -1,8 +1,7 @@
-
-import React, { useEffect, useRef } from 'react';
-import { Location } from '../types';
-import { INITIAL_MAP_CENTER, INITIAL_ZOOM, COLORS } from '../constants';
-import { Locate } from 'lucide-react';
+import React, { useEffect, useRef } from "react";
+import { Location } from "../types";
+import { INITIAL_MAP_CENTER, INITIAL_ZOOM, COLORS } from "../constants";
+import { Locate } from "lucide-react";
 
 declare const L: any;
 
@@ -16,22 +15,31 @@ interface MapProps {
 }
 
 const isLocationOpen = (location: Location) => {
-  if (location.hours.type === '24h') return true;
-  
+  if (location.hours.type === "24h") return true;
+
   const now = new Date();
   const day = now.getDay();
   const time = now.getHours() * 60 + now.getMinutes();
-  
-  const [openH, openM] = location.hours.open!.split(':').map(Number);
-  const [closeH, closeM] = location.hours.close!.split(':').map(Number);
-  
+
+  const [openH, openM] = location.hours.open!.split(":").map(Number);
+  const [closeH, closeM] = location.hours.close!.split(":").map(Number);
+
   const openTime = (openH || 0) * 60 + (openM || 0);
   const closeTime = (closeH || 0) * 60 + (closeM || 0);
-  
-  return location.hours.days?.includes(day) && time >= openTime && time < closeTime;
+
+  return (
+    location.hours.days?.includes(day) && time >= openTime && time < closeTime
+  );
 };
 
-const Map: React.FC<MapProps> = ({ locations, onLocationSelect, selectedLocation, userLocation, isSidebarOpen, activeCategory }) => {
+const Map: React.FC<MapProps> = ({
+  locations,
+  onLocationSelect,
+  selectedLocation,
+  userLocation,
+  isSidebarOpen,
+  activeCategory,
+}) => {
   const mapRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const markersLayerRef = useRef<any>(null);
@@ -43,30 +51,46 @@ const Map: React.FC<MapProps> = ({ locations, onLocationSelect, selectedLocation
     if (!coords) return false;
     const lat = Array.isArray(coords) ? coords[0] : coords.lat;
     const lng = Array.isArray(coords) ? coords[1] : coords.lng;
-    
-    const nLat = typeof lat === 'string' ? parseFloat(lat) : lat;
-    const nLng = typeof lng === 'string' ? parseFloat(lng) : lng;
-    
-    return typeof nLat === 'number' && !isNaN(nLat) && 
-           typeof nLng === 'number' && !isNaN(nLng) && 
-           Math.abs(nLat) <= 90 && Math.abs(nLng) <= 180 &&
-           (nLat !== 0 || nLng !== 0);
+
+    const nLat = typeof lat === "string" ? parseFloat(lat) : lat;
+    const nLng = typeof lng === "string" ? parseFloat(lng) : lng;
+
+    return (
+      typeof nLat === "number" &&
+      !isNaN(nLat) &&
+      typeof nLng === "number" &&
+      !isNaN(nLng) &&
+      Math.abs(nLat) <= 90 &&
+      Math.abs(nLng) <= 180 &&
+      (nLat !== 0 || nLng !== 0)
+    );
   };
 
   const getCategoryConfig = (category: string) => {
-    if (category.includes('Referência')) return { color: COLORS.referencia, icon: 'fa-landmark', textColor: '#333' };
-    if (category.includes('Apoio')) return { color: COLORS.apoio, icon: 'fa-hands-holding', textColor: '#fff' };
-    if (category.includes('Doação')) return { color: COLORS.doacao, icon: 'fa-box-open', textColor: '#fff' };
-    return { color: COLORS.all, icon: 'fa-location-dot', textColor: '#fff' };
+    if (category.includes("Referência"))
+      return {
+        color: COLORS.referencia,
+        icon: "fa-landmark",
+        textColor: "#333",
+      };
+    if (category.includes("Apoio"))
+      return {
+        color: COLORS.apoio,
+        icon: "fa-hands-holding",
+        textColor: "#fff",
+      };
+    if (category.includes("Doação"))
+      return { color: COLORS.doacao, icon: "fa-box-open", textColor: "#fff" };
+    return { color: COLORS.all, icon: "fa-location-dot", textColor: "#fff" };
   };
 
   const createCustomIcon = (location: Location) => {
     const config = getCategoryConfig(location.category);
     const isOpen = isLocationOpen(location);
     const haloColor = isOpen ? COLORS.open : COLORS.closed;
-    
+
     return L.divIcon({
-      className: 'custom-marker-container',
+      className: "custom-marker-container",
       html: `
         <div class="marker-halo" style="background-color: ${haloColor};"></div>
         <div class="marker-pin" style="background-color: ${config.color}; color: ${config.textColor};">
@@ -79,19 +103,23 @@ const Map: React.FC<MapProps> = ({ locations, onLocationSelect, selectedLocation
   };
 
   useEffect(() => {
-    if (!containerRef.current || typeof L === 'undefined') return;
+    if (!containerRef.current || typeof L === "undefined") return;
 
-    const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '© CartoDB'
-    });
+    const streetLayer = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution: "Tiles © Esri",
+        maxZoom: 19,
+      },
+    );
 
     try {
-      mapRef.current = L.map(containerRef.current, { 
+      mapRef.current = L.map(containerRef.current, {
         zoomControl: false,
-        layers: [streetLayer] 
+        layers: [streetLayer],
       }).setView(INITIAL_MAP_CENTER, INITIAL_ZOOM);
 
-      L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
+      L.control.zoom({ position: "bottomright" }).addTo(mapRef.current);
       markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
 
       const timer = setTimeout(() => {
@@ -111,25 +139,34 @@ const Map: React.FC<MapProps> = ({ locations, onLocationSelect, selectedLocation
 
   // Efeito para ajustar o mapa quando a sidebar abre/fecha ou local é selecionado
   useEffect(() => {
-    if (mapRef.current && typeof L !== 'undefined') {
+    if (mapRef.current && typeof L !== "undefined") {
       const timer = setTimeout(() => {
         mapRef.current.invalidateSize({ animate: true });
-        
-        if (selectedLocation && isValidLatLng([selectedLocation.lat, selectedLocation.lng])) {
-          const sidebarWidth = isSidebarOpen && window.innerWidth > 640 ? 400 : 0;
-          mapRef.current.flyTo([selectedLocation.lat, selectedLocation.lng], 17, { 
-            duration: 1.2,
-            paddingTopLeft: [sidebarWidth, 0]
-          });
+
+        if (
+          selectedLocation &&
+          isValidLatLng([selectedLocation.lat, selectedLocation.lng])
+        ) {
+          const sidebarWidth =
+            isSidebarOpen && window.innerWidth > 640 ? 400 : 0;
+          mapRef.current.flyTo(
+            [selectedLocation.lat, selectedLocation.lng],
+            17,
+            {
+              duration: 1.2,
+              paddingTopLeft: [sidebarWidth, 0],
+            },
+          );
         }
-      }, 400); 
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [isSidebarOpen, selectedLocation]);
 
   // Atualização de marcadores
   useEffect(() => {
-    if (!mapRef.current || !markersLayerRef.current || typeof L === 'undefined') return;
+    if (!mapRef.current || !markersLayerRef.current || typeof L === "undefined")
+      return;
 
     markersLayerRef.current.clearLayers();
     const validCoords: any[] = [];
@@ -141,38 +178,48 @@ const Map: React.FC<MapProps> = ({ locations, onLocationSelect, selectedLocation
         const customIcon = createCustomIcon(loc);
         L.marker(coords, { icon: customIcon })
           .addTo(markersLayerRef.current)
-          .on('click', (e: any) => {
+          .on("click", (e: any) => {
             L.DomEvent.stopPropagation(e);
             onLocationSelect(loc);
           });
         validCoords.push(coords);
-      } catch (e) { console.warn("Erro ao criar marcador:", loc.name); }
+      } catch (e) {
+        console.warn("Erro ao criar marcador:", loc.name);
+      }
     });
 
     if (validCoords.length > 0 && !selectedLocation) {
-        try {
-          const bounds = L.latLngBounds(validCoords);
-          const sidebarPadding = isSidebarOpen && window.innerWidth > 640 ? 420 : 50;
-          mapRef.current.fitBounds(bounds, { 
-            paddingBottomRight: [50, 50],
-            paddingTopLeft: [sidebarPadding, 50], 
-            maxZoom: 16,
-            animate: true
-          });
-        } catch (e) { console.error("Erro fitBounds:", e); }
+      try {
+        const bounds = L.latLngBounds(validCoords);
+        const sidebarPadding =
+          isSidebarOpen && window.innerWidth > 640 ? 420 : 50;
+        mapRef.current.fitBounds(bounds, {
+          paddingBottomRight: [50, 50],
+          paddingTopLeft: [sidebarPadding, 50],
+          maxZoom: 16,
+          animate: true,
+        });
+      } catch (e) {
+        console.error("Erro fitBounds:", e);
+      }
     }
   }, [locations, activeCategory]);
 
   // Marcador de Usuário
   useEffect(() => {
-    if (!mapRef.current || !isValidLatLng(userLocation) || typeof L === 'undefined') return;
+    if (
+      !mapRef.current ||
+      !isValidLatLng(userLocation) ||
+      typeof L === "undefined"
+    )
+      return;
 
     try {
       if (userMarkerRef.current) {
         userMarkerRef.current.setLatLng(userLocation);
       } else {
         const userIcon = L.divIcon({
-          className: 'user-location-marker',
+          className: "user-location-marker",
           html: `
             <div class="user-flash"></div>
             <div class="user-pulse-outer"></div>
@@ -180,21 +227,27 @@ const Map: React.FC<MapProps> = ({ locations, onLocationSelect, selectedLocation
             <div class="user-dot-main"><i class="fa-solid fa-person-walking text-[10px] text-white"></i></div>
           `,
           iconSize: [30, 30],
-          iconAnchor: [15, 15]
+          iconAnchor: [15, 15],
         });
 
-        userMarkerRef.current = L.marker(userLocation, { icon: userIcon, zIndexOffset: 2000 }).addTo(mapRef.current);
-        
+        userMarkerRef.current = L.marker(userLocation, {
+          icon: userIcon,
+          zIndexOffset: 2000,
+        }).addTo(mapRef.current);
+
         if (!initialLocateDone.current) {
-          const sidebarWidth = isSidebarOpen && window.innerWidth > 640 ? 400 : 0;
-          mapRef.current.flyTo(userLocation, 16, { 
+          const sidebarWidth =
+            isSidebarOpen && window.innerWidth > 640 ? 400 : 0;
+          mapRef.current.flyTo(userLocation, 16, {
             duration: 2,
-            paddingTopLeft: [sidebarWidth, 0]
+            paddingTopLeft: [sidebarWidth, 0],
           });
           initialLocateDone.current = true;
         }
       }
-    } catch (e) { console.error("Erro no marcador de usuário:", e); }
+    } catch (e) {
+      console.error("Erro no marcador de usuário:", e);
+    }
   }, [userLocation]);
 
   return (
@@ -215,11 +268,14 @@ const Map: React.FC<MapProps> = ({ locations, onLocationSelect, selectedLocation
 
       {/* Geolocate Button */}
       <div className="absolute bottom-24 right-3 z-[1000]">
-        <button 
+        <button
           onClick={() => {
             if (isValidLatLng(userLocation)) {
-              const sidebarWidth = isSidebarOpen && window.innerWidth > 640 ? 400 : 0;
-              mapRef.current.flyTo(userLocation, 16, { paddingTopLeft: [sidebarWidth, 0] });
+              const sidebarWidth =
+                isSidebarOpen && window.innerWidth > 640 ? 400 : 0;
+              mapRef.current.flyTo(userLocation, 16, {
+                paddingTopLeft: [sidebarWidth, 0],
+              });
             } else {
               mapRef.current.locate({ setView: true, maxZoom: 16 });
             }
