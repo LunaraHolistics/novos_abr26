@@ -105,13 +105,10 @@ const Map: React.FC<MapProps> = ({
   useEffect(() => {
     if (!containerRef.current || typeof L === "undefined") return;
 
-    const streetLayer = L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-      {
-        attribution: "Tiles © Esri",
-        maxZoom: 19,
-      },
-    );
+    const streetLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors',
+  maxZoom: 19
+});
 
     try {
       mapRef.current = L.map(containerRef.current, {
